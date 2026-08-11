@@ -545,6 +545,16 @@
       await setDoc(doc(db, "cafes", cafeId, "plays", todayKey()), { count: increment(1) }, { merge: true });
     } catch (e) {}
   }
+  async function trackCompletion() {
+    try {
+      await setDoc(doc(db, "cafes", cafeId, "completions", todayKey()), { count: increment(1) }, { merge: true });
+    } catch (e) {}
+  }
+  async function trackCopy() {
+    try {
+      await setDoc(doc(db, "cafes", cafeId, "copies", todayKey()), { count: increment(1) }, { merge: true });
+    } catch (e) {}
+  }
 
   // ======================================================================
   //  phase transitions
@@ -626,6 +636,7 @@
     }
 
     if (state.count >= SHAKE_GOAL) {
+      trackCompletion();
       setTimeout(() => setPhase("success"), 500);
     }
   }
@@ -640,6 +651,7 @@
       document.execCommand("copy"); document.body.removeChild(ta);
     }
     toast.classList.remove("show"); void toast.offsetWidth; toast.classList.add("show");
+    trackCopy();
   }
 
   function resetGame() {

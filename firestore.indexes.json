@@ -13,6 +13,20 @@
       "fields": [
         { "fieldPath": "__name__", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "completions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "copies",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
