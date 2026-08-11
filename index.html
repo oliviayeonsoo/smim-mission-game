@@ -31,13 +31,17 @@
   @keyframes toast-in{0%{opacity:0;transform:translate(-50%,8px)}15%{opacity:1;transform:translate(-50%,0)}85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  #stage{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0e1f18;padding:0 0 20px;}
-  /* 피그마 원본(393x852)을 그대로 그린 뒤 통째로 축소한다.
+  #stage{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bar,#0e1f18);padding:0 0 20px;}
+  /* 피그마 원본(393x852)을 그대로 그린 뒤 통째로 확대/축소한다.
      이렇게 해야 배경·오브제·글자가 전부 같은 비율로 스케일돼서 어떤 화면에서도 어긋나지 않음.
-     --k 는 스크립트에서 화면 크기에 맞춰 계산해 넣어줌. */
-  :root{--k:1;}
-  #app-wrap{position:relative;flex:none;width:calc(393px * var(--k));height:calc(852px * var(--k));}
-  #app{position:absolute;left:0;top:0;width:393px;height:852px;transform-origin:top left;transform:scale(var(--k));overflow:hidden;background:#f5f9f4;box-shadow:0 40px 90px rgba(0,0,0,.5);}
+     모바일에서는 화면을 꽉 채우도록 확대하되, 잘리는 건 위/아래 장식 여백까지만(--k 계산부 참고).
+     남는 자투리 여백은 --bar(배경 아트 가장자리 색)로 메워서 티가 안 나게 함. */
+  :root{--k:1;--bar:#3c7a6a;}
+  #app-wrap{position:relative;flex:none;overflow:hidden;background:var(--bar);
+    width:min(100vw, calc(393px * var(--k)));
+    height:min(100vh, calc(852px * var(--k)));
+    height:min(100dvh, calc(852px * var(--k)));}
+  #app{position:absolute;left:50%;top:50%;margin-left:-196.5px;margin-top:-426px;width:393px;height:852px;transform-origin:center center;transform:scale(var(--k));overflow:hidden;background:#f5f9f4;}
 
   .phase{display:none;position:absolute;inset:0;overflow:hidden;}
   .phase.active{display:block;animation:fade-in .35s ease both;}
@@ -156,7 +160,7 @@
   .word-bubble .bubble-content{position:absolute;left:0;top:32%;width:100%;height:68%;padding:0 9% 4%;box-sizing:border-box;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px 8px;overflow:hidden;}
   .word-chip{font-family:'Pretendard';font-weight:400;font-size:14px;color:#346d5e;animation:chip-in .4s cubic-bezier(.2,1.4,.4,1) both;}
   .word-chip.current{font-weight:700;text-decoration:underline;text-underline-offset:2px;}
-  .tap-guide{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);color:#cfe8de;font-size:11px;letter-spacing:1px;opacity:.8;z-index:5;white-space:nowrap;}
+  .tap-guide{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);color:#cfe8de;font-size:11px;letter-spacing:1px;opacity:.8;z-index:5;white-space:nowrap;}
 
   /* ===== success ===== */
   #phase-success .title{position:absolute;left:0;top:19.2%;transform:translateY(-50%);width:100%;text-align:center;font-family:'HS굴토끼체';font-size:40px;color:#e3e79b;z-index:5;}
@@ -573,10 +577,14 @@
   // ======================================================================
   //  phase transitions
   // ======================================================================
+  // 화면 비율이 안 맞아 생기는 자투리 여백을, 그 화면 배경 아트의 가장자리 색으로 채워 티 안 나게
+  const BAR_COLORS = { intro: "#3c7a6a", quiz: "#24564b", "quiz-fail": "#24564b", "quiz-correct": "#24564b", shake: "#0f5a4b", success: "#0d4b3f" };
+
   function setPhase(next) {
     state.phase = next;
     Object.entries(phases).forEach(([name, el]) => el.classList.toggle("active", name === next));
     gearBtn.classList.toggle("show", next === "intro");
+    document.documentElement.style.setProperty("--bar", BAR_COLORS[next] || "#0e1f18");
 
     const confettiLayer = document.getElementById("confetti-layer");
     if (confettiLayer) {
@@ -806,11 +814,23 @@
     setRing(0);
   }
 
-  // 피그마 원본 393x852 캔버스를 화면에 맞게 통째로 축소 (--k)
+  // 피그마 원본 393x852 캔버스를 화면 크기에 맞게 통째로 확대/축소 (--k)
+  // SAFE_H: 항상 화면에 남아있어야 하는 콘텐츠 높이(디자인 기준 px).
+  //   852 - 700 = 152px 까지만 잘릴 수 있는데, 그 범위는 위쪽 줄무늬/아래쪽 그림자 같은
+  //   장식 영역이라 글자나 오브제는 잘리지 않는다.
+  const DESIGN_W = 393, DESIGN_H = 852, SAFE_H = 700, DESKTOP_MIN_W = 520;
+
   function fitApp() {
     const vw = window.innerWidth;
     const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-    const k = Math.min(vw / 393, vh / 852, 420 / 393);
+    let k;
+    if (vw > DESKTOP_MIN_W) {
+      // 데스크톱: 폰 프레임처럼 전체가 다 보이게
+      k = Math.min(vw / DESIGN_W, vh / DESIGN_H, 420 / DESIGN_W);
+    } else {
+      // 모바일: 화면을 꽉 채우되, 콘텐츠가 잘리지 않는 선까지만 확대
+      k = Math.min(Math.max(vw / DESIGN_W, vh / DESIGN_H), vh / SAFE_H);
+    }
     document.documentElement.style.setProperty("--k", String(k));
   }
 
