@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>스밈 · 와이파이 미션</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  @font-face{font-family:'HS굴토끼체';src:url('assets/fonts/HSGooltokki.ttf') format('truetype');font-display:swap;}
+  @font-face{font-family:'Griun Ina Doongdoong';src:url('assets/fonts/Griun_InaDoongdoong-Rg.ttf') format('truetype');font-display:swap;}
+  @font-face{font-family:'Clash Grotesk Medium';src:url('assets/fonts/ClashGrotesk-Medium.otf') format('opentype');font-display:swap;}
+
+  :root{color-scheme:light;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:#0e1f18;font-family:'Pretendard',system-ui,sans-serif;}
+  .title-font{font-family:'HS굴토끼체','Pretendard',system-ui,sans-serif;font-weight:400;}
+  button{font-family:inherit;}
+
+  @keyframes pop-in{0%{opacity:0;transform:scale(.75) translateY(6px)}70%{opacity:1;transform:scale(1.06) translateY(0)}100%{transform:scale(1)}}
+  @keyframes chip-in{0%{opacity:0;transform:translateY(8px) scale(.85)}60%{opacity:1;transform:translateY(-2px) scale(1.05)}100%{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes shake-x{0%,100%{transform:translateX(0) rotate(var(--rot,0deg))}20%{transform:translateX(-6px) rotate(calc(var(--rot,0deg) - 4deg))}40%{transform:translateX(5px) rotate(calc(var(--rot,0deg) + 4deg))}60%{transform:translateX(-4px) rotate(calc(var(--rot,0deg) - 2deg))}80%{transform:translateX(3px) rotate(calc(var(--rot,0deg) + 2deg))}}
+  @keyframes tap-pulse{0%{transform:scale(1)}30%{transform:scale(.94)}100%{transform:scale(1)}}
+  @keyframes plate-bounce{0%,100%{transform:scale(1)}35%{transform:scale(1.015) translateY(-3px)}}
+  @keyframes ring-pop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+  @keyframes card-up{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes sway{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes scroll-link-bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+  @keyframes fade-in{from{opacity:0}to{opacity:1}}
+  @keyframes toast-in{0%{opacity:0;transform:translate(-50%,8px)}15%{opacity:1;transform:translate(-50%,0)}85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #stage{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#0e1f18;}
+  #app{position:relative;width:100%;max-width:420px;aspect-ratio:393/852;max-height:100vh;max-height:100dvh;overflow:hidden;background:#f5f9f4;box-shadow:0 40px 90px rgba(0,0,0,.5);}
+
+  .phase{display:none;position:absolute;inset:0;overflow:hidden;}
+  .phase.active{display:block;animation:fade-in .35s ease both;}
+
+  .layer-bg{position:absolute;inset:0;overflow:hidden;}
+  .layer-bg img.scene{position:absolute;left:0;top:6.8%;width:100%;height:81.8%;object-fit:cover;}
+  .layer-bg .stripe-band{position:absolute;left:0;top:0;width:100%;height:9.3%;overflow:hidden;}
+  .layer-bg .stripe-band img{position:absolute;left:0;bottom:0;width:100%;}
+  .shadow-fade{position:absolute;left:0;top:68.8%;width:100%;height:19.8%;background:linear-gradient(180deg,rgba(65,108,91,0) 0%,#416c5b 100%);}
+  .shadow-solid{position:absolute;left:0;top:88.6%;width:100%;height:11.4%;background:#416c5b;}
+  .shadow-fade.moss{background:linear-gradient(180deg,rgba(21,90,77,0) 0%,#155a4d 100%);}
+  .shadow-solid.moss{background:#155a4d;}
+  .dim{position:absolute;inset:0;background:rgba(0,0,0,.5);pointer-events:none;}
+  .dim.light{background:rgba(0,0,0,.3);}
+
+  .badge-eyebrow{position:absolute;left:50%;top:12.3%;transform:translate(-50%,-50%);font-size:11px;color:#e3e79b;text-align:center;white-space:nowrap;z-index:5;}
+  .badge-eyebrow b{font-weight:700;}
+
+  .prop{position:absolute;pointer-events:none;}
+  .prop img{width:100%;height:100%;object-fit:contain;display:block;}
+
+  .sticker{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;z-index:4;}
+  .sticker .face{position:relative;padding:6px 14px;}
+  .sticker .face::before{content:"";position:absolute;left:5%;top:10%;width:100%;height:100%;background:#e3e79b;z-index:-1;}
+  .sticker .face{background:transparent;color:#315c51;}
+  .sticker-tag{background:#e3e79b;color:#315c51;padding:8px 16px;font-size:22px;line-height:1.15;white-space:nowrap;}
+
+  .stk-btn{position:absolute;z-index:6;border:none;cursor:pointer;background:none;padding:0;-webkit-tap-highlight-color:transparent;}
+  .stk-btn .shadow{position:absolute;inset:0;transition:transform .08s;}
+  .stk-btn .face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform .08s;}
+  .stk-btn:active .face{transform:scale(.96);}
+  .stk-btn .label{position:relative;font-family:'HS굴토끼체';white-space:nowrap;}
+
+  .btn-primary .shadow{background:#e3e79b;transform:rotate(0deg) translate(4%,4%);}
+  .btn-primary .face{background:#346d5e;}
+  .btn-primary .label{color:#e3e79b;}
+
+  .btn-danger .shadow{background:#fff;}
+  .btn-danger .face{background:#b70000;}
+  .btn-danger .label{color:#fff;}
+
+  .hint-caption{position:absolute;transform:translate(-50%,-50%);font-size:12px;color:#e3e79b;text-align:center;line-height:1.5;z-index:5;white-space:nowrap;max-width:92%;}
+  .hint-caption b{font-weight:700;}
+  .hint-caption.danger{color:#e3e79b;}
+  .hint-caption.danger b{color:#e3e79b;}
+
+  .confetti-layer{position:absolute;left:50%;bottom:12%;width:100%;height:42%;transform:translateX(-50%);pointer-events:none;z-index:4;overflow:visible;}
+  .confetti-piece{position:absolute;left:50%;bottom:0;width:8px;height:14px;border-radius:2px;opacity:0;transform-origin:center;animation:none;}
+  .confetti-piece:nth-child(odd){background:#e3e79b;}
+  .confetti-piece:nth-child(even){background:#7cc7a6;}
+  .confetti-piece:nth-child(3n){background:#fff6a2;}
+  .confetti-piece:nth-child(5n){background:#8fd3ff;}
+  .confetti-layer.active .confetti-piece{animation:confetti-burst 2.2s cubic-bezier(.2,.95,.25,1) forwards;}
+
+  .q-title{position:absolute;inset:0;z-index:5;pointer-events:none;}
+  .q-title .line{position:absolute;display:flex;align-items:center;justify-content:center;background:#e3e79b;color:#315c51;font-family:'HS굴토끼체';line-height:1.1;white-space:nowrap;box-sizing:border-box;}
+
+  .sparkle{position:absolute;width:16px;height:16px;pointer-events:none;opacity:.9;animation:sway 2.4s ease-in-out infinite;}
+
+  @keyframes confetti-burst{0%{opacity:0;transform:translate(-50%,0) scale(.22) rotate(0deg)}14%{opacity:1;transform:translate(calc(-50% + var(--x,0px)),-18px) scale(1) rotate(0deg)}100%{opacity:0;transform:translate(calc(-50% + var(--x,0px)),320px) scale(1) rotate(var(--rot,180deg))}}
+
+  /* ===== intro (393x852 basis, converted to %) ===== */
+  #phase-intro .headline{position:absolute;inset:0;z-index:5;}
+  #phase-intro .headline .word{position:absolute;display:flex;align-items:center;justify-content:center;background:#e3e79b;color:#315c51;font-family:'HS굴토끼체';font-size:40px;line-height:1.1;box-sizing:border-box;}
+  #phase-intro .headline .word:nth-child(1){left:45.5%;top:18.8%;width:24.7%;height:6.9%;transform:rotate(0deg);}
+  #phase-intro .headline .word:nth-child(2){left:60.1%;top:25.3%;width:25.6%;height:6.9%;transform:rotate(4.47deg);}
+  #phase-intro .headline .word:nth-child(3){left:47.6%;top:32%;width:32.6%;height:6.9%;transform:rotate(-4.22deg);}
+  #start-btn{left:19.8%;top:45.5%;width:33.6%;height:6.6%;}
+  .press-tag{position:absolute;left:46.6%;top:52.5%;background:#e3e79b;color:#315c51;font-family:'Pretendard';font-weight:700;font-size:6px;padding:3px 8px;z-index:6;animation:sway 2s ease-in-out infinite;}
+
+  /* ===== quiz ===== */
+  #phase-quiz .line:nth-child(1),#phase-quiz-fail .line:nth-child(1){left:44%;top:20.1%;width:39.4%;height:4.7%;font-size:25px;transform:rotate(-1.5deg);}
+  #phase-quiz .line:nth-child(2),#phase-quiz-fail .line:nth-child(2){left:52.5%;top:25.5%;width:39.7%;height:4.7%;font-size:25px;transform:rotate(1.2deg);}
+  .quiz-hint{left:70.9%;top:31.7%;font-size:12px;}
+  #opt1{left:11.2%;top:32.9%;width:37.6%;height:5.2%;transform:rotate(-3.23deg);}
+  #opt2{left:24.9%;top:51.5%;width:48.6%;height:5.7%;transform:rotate(3.88deg);}
+  .dispenser-prop{left:15.5%;top:21%;width:28.5%;height:24.5%;}
+  .mossplate-prop{left:11.5%;top:45.4%;width:44.9%;height:23.8%;}
+  .fail-hint{left:72%;top:33%;font-size:12px;}
+  #fail-opt{left:11.2%;top:33%;width:37.6%;height:5.2%;transform:rotate(-3.23deg);}
+  .dispenser-prop.fail-pos{left:15.5%;top:21%;width:28.5%;height:24.5%;}
+  .mossplate-prop.fail-pos{left:11.5%;top:45.4%;width:44.9%;height:23.8%;}
+  #answer-btn{left:48.1%;top:53.3%;width:37.4%;height:6.6%;}
+
+  /* ===== quiz correct ===== */
+  #phase-quiz-correct .line:nth-child(1){left:43.3%;top:21.7%;width:39.4%;height:4.7%;font-size:25px;transform:rotate(-1.5deg);}
+  #phase-quiz-correct .line:nth-child(2){left:51.8%;top:27.2%;width:39.7%;height:4.7%;font-size:25px;transform:rotate(1.2deg);}
+  .correct-hint{left:71.6%;top:35%;font-size:12px;line-height:1.7;}
+  .dispenser-prop.correct-pos{left:15.5%;top:21%;width:28.5%;height:24.5%;}
+  #opt2-correct{left:24.9%;top:51.5%;width:48.6%;height:5.7%;transform:rotate(3.88deg);}
+  .mossplate-prop.correct-pos{left:11.5%;top:45.4%;width:44.9%;height:23.8%;}
+  #next-btn{left:60.8%;top:59.7%;width:24.5%;height:5.9%;}
+
+  /* ===== mission2 ===== */
+  #phase-shake{cursor:pointer;}
+  #phase-shake .line:nth-child(1){left:36.1%;top:20.8%;width:26.7%;height:4%;font-size:20px;transform:rotate(-1.5deg);}
+  #phase-shake .line:nth-child(2){left:20.6%;top:25.5%;width:60.6%;height:4%;font-size:20px;transform:rotate(1.2deg);}
+  .shake-hint{left:50.8%;top:29.8%;font-size:11px;}
+  .hand{position:absolute;z-index:4;pointer-events:none;}
+  .hand-left{left:25%;top:33%;width:19%;}
+  .hand-right{left:56%;top:33%;width:19%;}
+  .hand-frame{position:absolute;left:0;top:0;width:100%;height:auto;display:block;filter:drop-shadow(0 8px 10px rgba(20,50,40,.25));}
+  .hand-frame.pose-down{opacity:0;}
+  .hand.shake-anim .hand-frame.pose-up{animation:hand-pose-up .42s ease;}
+  .hand.shake-anim .hand-frame.pose-down{animation:hand-pose-down .42s ease;}
+  @keyframes hand-pose-up{0%,100%{opacity:1}45%,60%{opacity:0}}
+  @keyframes hand-pose-down{0%,100%{opacity:0}45%,60%{opacity:1}}
+
+  .ring-wrap{position:absolute;left:38.9%;top:53.9%;width:22.4%;aspect-ratio:1/1;z-index:6;}
+  .ring-wrap svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);}
+  .ring-wrap .ring-num{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+  .ring-wrap .big{font-family:'Griun Ina Doongdoong';font-size:40px;color:#416c5b;line-height:1;}
+  .ring-wrap .small{font-family:'Clash Grotesk Medium';font-size:12px;color:#bababa;margin-left:2px;transform:translateY(6px);}
+  .word-bubble{position:absolute;left:15.3%;top:63%;width:69.5%;height:16%;z-index:5;}
+  .word-bubble .bubble-bg{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 10px 16px rgba(20,50,40,.18));}
+  .word-bubble .bubble-content{position:absolute;left:0;top:32%;width:100%;height:68%;padding:0 9% 4%;box-sizing:border-box;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px 8px;overflow:hidden;}
+  .word-chip{font-family:'Pretendard';font-weight:400;font-size:14px;color:#346d5e;animation:chip-in .4s cubic-bezier(.2,1.4,.4,1) both;}
+  .word-chip.current{font-weight:700;text-decoration:underline;text-underline-offset:2px;}
+  .tap-guide{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);color:#cfe8de;font-size:11px;letter-spacing:1px;opacity:.8;z-index:5;white-space:nowrap;}
+
+  /* ===== success ===== */
+  #phase-success .title{position:absolute;left:0;top:19.2%;transform:translateY(-50%);width:100%;text-align:center;font-family:'HS굴토끼체';font-size:40px;color:#e3e79b;z-index:5;}
+  .pw-card{position:absolute;left:12.2%;top:28.4%;width:76%;background:#e3e79b;border-radius:15px;padding:12px 20px;text-align:center;z-index:5;cursor:pointer;border:none;animation:card-up .6s cubic-bezier(.16,1,.3,1) both;}
+  .pw-card .pw-label{font-family:'HS굴토끼체';font-size:13px;color:rgba(52,109,94,.55);margin:0 0 2px;}
+  .pw-card .pw-value{font-family:'HS굴토끼체';font-size:40px;color:#346d5e;word-break:break-all;margin:0;}
+  .copy-hint{position:absolute;left:50.3%;top:42.4%;transform:translate(-50%,-50%);font-size:10.5px;color:#e3e79b;font-weight:500;z-index:5;white-space:nowrap;}
+  .scroll-note{position:absolute;left:50.1%;top:55.2%;transform:translate(-50%,-50%);text-align:center;color:#e3e79b;font-size:11px;line-height:1.6;z-index:5;white-space:nowrap;}
+  .scroll-note b{font-weight:700;}
+  .scroll-arrow{position:absolute;left:49%;top:59.2%;width:18px;height:18.6%;transform:translateX(-50%);z-index:5;opacity:.95;pointer-events:none;animation:scroll-link-bob 1.1s ease-in-out infinite;}
+  .scroll-arrow::before{content:"";position:absolute;left:50%;top:0;width:2px;height:100%;transform:translateX(-50%);background:linear-gradient(180deg,rgba(227,231,155,0) 0%,rgba(227,231,155,.95) 35%,rgba(227,231,155,.95) 100%);border-radius:999px;}
+  .scroll-arrow::after{content:"";position:absolute;left:50%;bottom:0.5px;width:10px;height:10px;border-right:2px solid #e3e79b;border-bottom:2px solid #e3e79b;transform:translate(-50%,0) rotate(45deg);margin-bottom:-1px;}
+  .social{position:absolute;left:49%;top:84.8%;transform:translate(-50%,-50%);text-align:left;color:#e3e79b;font-size:11px;line-height:1.9;z-index:5;white-space:nowrap;}
+  .social b{font-weight:700;}
+  .social a{color:#e3e79b;text-decoration:underline;}
+
+  .toast{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);background:#315c51;color:#e3e79b;font-size:12.5px;font-weight:700;padding:9px 18px;border-radius:999px;z-index:20;pointer-events:none;opacity:0;white-space:nowrap;}
+  .toast.show{animation:toast-in 1.6s ease both;}
+
+  #boot-overlay{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0e1f18;color:#cfe8de;text-align:center;padding:32px;}
+  #boot-spinner{width:30px;height:30px;border-radius:50%;border:3px solid rgba(227,231,155,.25);border-top-color:#e3e79b;animation:spin .8s linear infinite;}
+
+  #gear-btn{position:absolute;left:12px;bottom:12px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.12);opacity:.4;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:15;padding:0;}
+  #gear-btn.show{display:flex;}
+  #gear-btn:hover{opacity:.85;}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(4,10,20,.6);z-index:200;display:none;}
+  .modal-backdrop.show{display:block;}
+  .modal-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,86vw);max-height:82vh;overflow-y:auto;background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.35);padding:26px 22px;z-index:201;display:none;color:#2d4a3e;}
+  .modal-card.show{display:block;}
+  .modal-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:none;background:#f0f4ef;color:#2d4a3e;cursor:pointer;font-size:13px;}
+  .modal-card h3{margin:0 0 18px;font-family:'HS굴토끼체';font-weight:400;font-size:19px;padding-right:20px;color:#315c51;}
+  .modal-input{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid #d8e4dc;background:#f7faf6;color:#2d4a3e;font-size:15px;outline:none;}
+  .modal-input:focus{border-color:#346d5e;}
+  .modal-error{min-height:16px;margin:8px 0 0;font-size:12.5px;color:#c0392b;}
+  .modal-hint{min-height:16px;margin:8px 0 0;font-size:12.5px;color:#346d5e;}
+  .modal-cta{margin-top:14px;width:100%;border:none;cursor:pointer;padding:13px;border-radius:14px;background:#346d5e;color:#e3e79b;font-weight:700;font-size:15px;}
+  .admin-section{margin-top:18px;padding-top:16px;border-top:1px solid #eef2ed;}
+  .admin-section:first-of-type{margin-top:0;padding-top:0;border-top:none;}
+  .admin-label{margin:0 0 8px;font-size:13px;font-weight:600;color:#3f6459;display:flex;justify-content:space-between;gap:8px;}
+  .admin-label span.count{font-weight:400;color:#8aa598;font-size:11px;}
+  .admin-row{display:flex;gap:8px;}
+  .admin-row .modal-input{flex:1;}
+  .admin-save-btn{padding:0 16px;border-radius:12px;border:none;background:#346d5e;color:#e3e79b;font-weight:700;cursor:pointer;}
+  #admin-chart svg{display:block;}
+  .chart-legend{display:flex;gap:6px;margin-bottom:8px;font-size:11px;color:#6f8b7f;}
+  .chart-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:10px;}
+  .chart-legend .dot:first-child{margin-left:0;}
+</style>
+</head>
+<body>
+
+<div id="stage">
+<div id="app">
+
+  <!-- ============ INTRO ============ -->
+  <section id="phase-intro" class="phase active">
+    <div class="layer-bg">
+      <div class="stripe-band"><img src="assets/img/border-stripe.png" alt=""></div>
+      <img class="scene" src="assets/img/scene-bathroom.png" alt="">
+      <div class="shadow-fade"></div>
+      <div class="shadow-solid"></div>
+    </div>
+    <p class="badge-eyebrow"><b>스밈</b>과 함께하는 <b>지구 지키기</b></p>
+    <div class="headline">
+      <span class="word">지구를</span>
+      <span class="word">지키는</span>
+      <span class="word">와이파이</span>
+    </div>
+    <button class="stk-btn btn-primary big" id="start-btn">
+      <span class="shadow"></span>
+      <span class="face"><span class="label" style="font-size:34px;">미션시작</span></span>
+    </button>
+    <span class="press-tag">버튼 누르기!</span>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="phase-quiz" class="phase">
+    <div class="layer-bg">
+      <div class="stripe-band"><img src="assets/img/border-stripe.png" alt=""></div>
+      <img class="scene" src="assets/img/scene-bathroom.png" alt="">
+      <div class="shadow-fade"></div>
+      <div class="shadow-solid"></div>
+    </div>
+    <div class="dim"></div>
+    <p class="badge-eyebrow"><b>스밈</b>과 함께하는 <b>지구 지키기</b></p>
+    <div class="q-title">
+      <span class="line">손을 다 닦은 당신,</span>
+      <span class="line">다음으로 할 것은?</span>
+    </div>
+    <p class="hint-caption quiz-hint">1번과 2번 중 <b>정답</b>에 클릭!</p>
+    <div class="prop dispenser-prop"><img src="assets/img/dispenser-question.png" alt=""></div>
+    <button class="stk-btn btn-primary" id="opt1" data-correct="false">
+      <span class="shadow"></span>
+      <span class="face"><span class="label" style="font-size:18px;">1. 핸드타올 2-3장 쓰기</span></span>
+    </button>
+    <div class="prop mossplate-prop"><img src="assets/img/mossplate-question.png" alt=""></div>
+    <button class="stk-btn btn-primary" id="opt2" data-correct="true">
+      <span class="shadow"></span>
+      <span class="face"><span class="label" style="font-size:18px;">2. 손 털고 핸드타올 1장만 쓰기</span></span>
+    </button>
+  </section>
+
+  <!-- ============ QUIZ FAIL ============ -->
+  <section id="phase-quiz-fail" class="phase">
+    <div class="layer-bg">
+      <div class="stripe-band"><img src="assets/img/border-stripe.png" alt=""></div>
+      <img class="scene" src="assets/img/scene-bathroom.png" alt="">
+      <div class="shadow-fade"></div>
+      <div class="shadow-solid"></div>
+    </div>
+    <div class="dim"></div>
+    <p class="badge-eyebrow"><b>스밈</b>과 함께하는 <b>지구 지키기</b></p>
+    <div class="q-title">
+      <span class="line">손을 다 닦은 당신,</span>
+      <span class="line">다음으로 할 것은?</span>
+    </div>
+    <p class="hint-caption danger fail-hint"><b>이런!</b> 오답이에요.<br> 정답은 뭐였을까요?</p>
+    <div class="prop dispenser-prop fail-pos"><img src="assets/img/dispenser.png" alt=""></div>
+    <div class="stk-btn btn-danger" id="fail-opt">
+      <span class="shadow"></span>
+      <span class="face"><span class="label" style="font-size:18px;">1. 핸드타올 2-3장 쓰기</span></span>
+    </div>
+    <div class="prop mossplate-prop fail-pos"><img src="assets/img/mossplate-fail.png" alt=""></div>
+    <button class="stk-btn btn-primary" id="answer-btn">
+      <span class="shadow"></span>
+      <span class="face"><span class="label" style="font-size:34px;">정답 보기 <span style="font-size:28px;">&gt;</span></span></span>
+    </button>
+  </section>
+
+  <!-- ============ QUIZ CORRECT ============ -->
+  <section id="phase-quiz-correct" class="phase">
+    <div class="layer-bg">
+      <div class="stripe-band"><img src="assets/img/border-stripe.png" alt=""></div>
+      <img class="scene" src="assets/img/scene-bathroom.png" alt="">
+      <div class="shadow-fade"></div>
+      <div class="shadow-solid"></div>
+    </div>
+    <div class="dim"></div>
+    <p class="badge-eyebrow"><b>스밈</b>과 함께하는 <b>지구 지키기</b></p>
+    <div class="q-title">
+      <span class="line">손을 다 닦은 당신,</span>
+      <span class="line">다음으로 할 것은?</span>
+    </div>
+    <p class="hint-caption correct-hint">정답은 <b>손 털고 핸드타올 1장만 쓰기!</b><br>이끼 플레이트에 손을 털어볼까요?</p>
+    <div class="prop dispenser-prop correct-pos"><img src="assets/img/dispenser.png" alt=""></div>
+    <div class="prop mossplate-prop correct-pos"><img src="assets/img/mossplate-success.png" alt=""></div>
+    <div class="stk-btn btn-primary" id="opt2-correct">
+      <span class="shadow"></span>
+      <span class="face"><span class="label" style="font-size:18px;">2. 손 털고 핸드타올 1장만 쓰기</span></span>
+    </div>
+    <button class="stk-btn btn-primary" id="next-btn">
+      <span class="shadow"></span>
+      <span class="face"><span class="label" style="font-size:34px;">다음 &gt;</span></span>
+    </button>
+  </section>
+
+  <!-- ============ MISSION 2 (SHAKE) ============ -->
+  <section id="phase-shake" class="phase">
+    <div class="layer-bg">
+      <div class="stripe-band" style="height:11%;overflow:hidden;"><img src="assets/img/moss-scene.png" alt="" style="height:750%;width:100%;position:absolute;top:-0.6%;left:0;object-fit:cover;"></div>
+      <img class="scene" src="assets/img/moss-scene.png" alt="" style="top:6%;height:82%;">
+      <div class="shadow-fade moss"></div>
+      <div class="shadow-solid moss"></div>
+    </div>
+    <p class="badge-eyebrow"><b>스밈</b>과 함께하는 <b>지구 지키기</b></p>
+    <div class="q-title">
+      <span class="line">진짜 마지막!</span>
+      <span class="line">이끼 플레이트에 손을 털어봅시다.</span>
+    </div>
+    <p class="hint-caption shake-hint"><b>화면을 클릭</b>하면 손을 털 수 있어요</p>
+    <div class="hand hand-left" id="hand-left">
+      <img class="hand-frame pose-up" src="assets/img/hand-left-up.png" alt="">
+      <img class="hand-frame pose-down" src="assets/img/hand-left-down.png" alt="">
+    </div>
+    <div class="hand hand-right" id="hand-right">
+      <img class="hand-frame pose-up" src="assets/img/hand-right-up.png" alt="">
+      <img class="hand-frame pose-down" src="assets/img/hand-right-down.png" alt="">
+    </div>
+    <div class="ring-wrap" id="ring-wrap">
+      <svg viewBox="0 0 88 88">
+        <circle cx="44" cy="44" r="44" fill="#fff"/>
+        <circle id="ring-progress" cx="44" cy="44" r="40.4" fill="none" stroke="#e3e79b" stroke-width="7.2" stroke-dasharray="253.8" stroke-dashoffset="253.8"/>
+      </svg>
+      <div class="ring-num"><span class="big" id="shake-count">0</span><span class="small">/12</span></div>
+    </div>
+    <div class="word-bubble">
+      <img class="bubble-bg" src="assets/img/word-bubble.svg" alt="">
+      <div class="bubble-content" id="word-bubble"></div>
+    </div>
+    <p class="tap-guide">화면 아무데나 탭 · 스페이스바로도 가능해요</p>
+  </section>
+
+  <!-- ============ SUCCESS ============ -->
+  <section id="phase-success" class="phase">
+    <div class="layer-bg">
+      <div class="stripe-band" style="height:11%;overflow:hidden;"><img src="assets/img/moss-scene.png" alt="" style="height:750%;width:100%;position:absolute;top:-0.6%;left:0;object-fit:cover;"></div>
+      <img class="scene" src="assets/img/moss-scene.png" alt="" style="top:6%;height:82%;">
+      <div class="shadow-fade moss"></div>
+      <div class="shadow-solid moss"></div>
+    </div>
+    <div class="dim light"></div>
+    <div class="confetti-layer" id="confetti-layer">
+      <span class="confetti-piece" style="--x:-120px; --rot:18deg; animation-delay:0s;"></span>
+      <span class="confetti-piece" style="--x:-96px; --rot:-24deg; animation-delay:.03s;"></span>
+      <span class="confetti-piece" style="--x:-72px; --rot:42deg; animation-delay:.06s;"></span>
+      <span class="confetti-piece" style="--x:-48px; --rot:-36deg; animation-delay:.09s;"></span>
+      <span class="confetti-piece" style="--x:-24px; --rot:30deg; animation-delay:.12s;"></span>
+      <span class="confetti-piece" style="--x:0px; --rot:-18deg; animation-delay:.15s;"></span>
+      <span class="confetti-piece" style="--x:24px; --rot:64deg; animation-delay:.18s;"></span>
+      <span class="confetti-piece" style="--x:48px; --rot:-52deg; animation-delay:.21s;"></span>
+      <span class="confetti-piece" style="--x:72px; --rot:120deg; animation-delay:.24s;"></span>
+      <span class="confetti-piece" style="--x:96px; --rot:-110deg; animation-delay:.27s;"></span>
+      <span class="confetti-piece" style="--x:120px; --rot:90deg; animation-delay:.3s;"></span>
+      <span class="confetti-piece" style="--x:-140px; --rot:-78deg; animation-delay:.33s;"></span>
+      <span class="confetti-piece" style="--x:140px; --rot:110deg; animation-delay:.36s;"></span>
+      <span class="confetti-piece" style="--x:-60px; --rot:-140deg; animation-delay:.05s;"></span>
+      <span class="confetti-piece" style="--x:60px; --rot:150deg; animation-delay:.08s;"></span>
+      <span class="confetti-piece" style="--x:-100px; --rot:70deg; animation-delay:.11s;"></span>
+      <span class="confetti-piece" style="--x:100px; --rot:-80deg; animation-delay:.14s;"></span>
+      <span class="confetti-piece" style="--x:-20px; --rot:200deg; animation-delay:.17s;"></span>
+      <span class="confetti-piece" style="--x:20px; --rot:-200deg; animation-delay:.2s;"></span>
+      <span class="confetti-piece" style="--x:-80px; --rot:160deg; animation-delay:.23s;"></span>
+      <span class="confetti-piece" style="--x:80px; --rot:-160deg; animation-delay:.26s;"></span>
+    </div>
+    <p class="badge-eyebrow"><b>스밈</b>과 함께하는 <b>지구 지키기</b></p>
+    <p class="title">미션 성공!</p>
+    <button class="pw-card" id="pw-card">
+      <p class="pw-label">와이파이 비밀번호</p>
+      <p class="pw-value" id="pw-out">iwanttogohome</p>
+    </button>
+    <p class="copy-hint"><b>비밀번호를 누르면</b> 바로 복사돼요</p>
+    <p class="scroll-note"><b>스밈</b>의 활동이 더 알고싶다면?<br>아래로 스크롤</p>
+    <div class="scroll-arrow" aria-hidden="true"></div>
+    <div class="social">
+      <div><b>인스타그램</b>: <a href="#" id="link-ig">하이퍼링크</a></div>
+      <div><b>홈페이지</b>: <a href="#" id="link-home">하이퍼링크</a></div>
+      <div><b>유튜브</b>: <a href="#" id="link-yt">하이퍼링크</a></div>
+    </div>
+    <button id="reset-btn" style="position:absolute;right:4%;top:3%;z-index:8;border:none;cursor:pointer;background:rgba(0,0,0,.18);color:#e3e79b;font-family:'Pretendard';font-weight:600;font-size:10.5px;padding:6px 12px;border-radius:999px;">처음으로 ↺</button>
+  </section>
+
+  <div class="toast" id="toast">복사됐어요 ✓</div>
+
+  <!-- ============ BOOT OVERLAY ============ -->
+  <div id="boot-overlay">
+    <div id="boot-spinner"></div>
+    <p id="boot-text">불러오는 중...</p>
+  </div>
+
+  <!-- ============ ADMIN GEAR ============ -->
+  <button id="gear-btn" aria-label="관리자 설정">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="#2d4a3e" stroke-width="1.6"></path><path d="M19.4 13a7.5 7.5 0 000-2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 00-1.7-1L15 3.5h-4l-.4 2.5a7.6 7.6 0 00-1.7 1l-2.3-.9-2 3.4L6.6 11a7.5 7.5 0 000 2l-2 1.5 2 3.4 2.3-.9c.5.4 1.1.75 1.7 1l.4 2.5h4l.4-2.5c.6-.25 1.2-.6 1.7-1l2.3.9 2-3.4-2-1.5z" stroke="#2d4a3e" stroke-width="1.3" stroke-linejoin="round"></path></svg>
+  </button>
+
+</div>
+</div>
+
+<!-- ============ ADMIN MODALS ============ -->
+<div class="modal-backdrop" id="modal-backdrop"></div>
+
+<div class="modal-card" id="admin-login-modal">
+  <button class="modal-close" data-close>✕</button>
+  <h3>관리자 로그인</h3>
+  <input id="admin-pw-input" type="password" placeholder="관리자 비밀번호" class="modal-input" autocomplete="off">
+  <p class="modal-error" id="admin-login-error"></p>
+  <button class="modal-cta" id="admin-login-submit">확인</button>
+</div>
+
+<div class="modal-card" id="admin-dashboard-modal" style="width:min(380px,90vw);">
+  <button class="modal-close" data-close>✕</button>
+  <h3 id="admin-cafe-name">관리자 페이지</h3>
+
+  <div class="admin-section">
+    <p class="admin-label">와이파이 비밀번호</p>
+    <div class="admin-row">
+      <input id="admin-pw-edit" type="text" class="modal-input" autocomplete="off">
+      <button class="admin-save-btn" id="admin-pw-save">저장</button>
+    </div>
+    <p class="modal-hint" id="admin-save-msg"></p>
+  </div>
+
+  <div class="admin-section">
+    <p class="admin-label">방문·참여 통계 <span class="count" id="admin-visit-total"></span></p>
+    <div id="admin-chart"><p class="modal-hint">불러오는 중...</p></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, updateDoc, setDoc, increment,
+    collection, query, orderBy, limit, getDocs, documentId,
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  "use strict";
+
+  // ======================================================================
+  //  Firebase 설정 — 새 프로젝트 만든 뒤 여기 채우기
+  // ======================================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDIF97LstMUToykQOJDfrb6aiui7FXBk5c",
+    authDomain: "smim-mission-game.firebaseapp.com",
+    projectId: "smim-mission-game",
+    storageBucket: "smim-mission-game.firebasestorage.app",
+    messagingSenderId: "716875617521",
+    appId: "1:716875617521:web:787401c9989792534e0550",
+  };
+
+  const SHAKE_GOAL = 12;
+  const STATS_DAYS = 14;
+  const SENTENCE = ["손을","12번","털면","핸드타올","한 장만으로도","충분하대요","손","털기를","습관화하고","다함께","지구를","지켜보아요!"];
+  const MANUAL_SHAKE_MIN_GAP = 160;
+
+  let db = null;
+  let cafeId = null;
+  let cafeData = null;
+
+  const state = { phase: "intro", count: 0 };
+  let lastShake = 0;
+
+  const $ = (sel) => document.querySelector(sel);
+  const phases = {
+    intro: $("#phase-intro"),
+    quiz: $("#phase-quiz"),
+    "quiz-fail": $("#phase-quiz-fail"),
+    "quiz-correct": $("#phase-quiz-correct"),
+    shake: $("#phase-shake"),
+    success: $("#phase-success"),
+  };
+  const gearBtn = $("#gear-btn");
+  const pwOut = $("#pw-out");
+  const toast = $("#toast");
+
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  function showBootError(html) {
+    $("#boot-text").innerHTML = html;
+    $("#boot-spinner").style.display = "none";
+  }
+
+  async function boot() {
+    const params = new URLSearchParams(location.search);
+    cafeId = params.get("cafe");
+
+    if (!cafeId) {
+      showBootError("카페 코드가 없어요.<br>사장님께 받은 QR코드로 접속해주세요.");
+      return;
+    }
+    if (firebaseConfig.apiKey.startsWith("PASTE_")) {
+      showBootError("아직 Firebase 설정이 연결되지 않았어요.<br>(개발자용 안내: firebaseConfig를 채워주세요)");
+      return;
+    }
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+    } catch (e) {
+      showBootError("설정 오류가 발생했어요.<br>잠시 후 다시 시도해주세요.");
+      return;
+    }
+    try {
+      const snap = await getDoc(doc(db, "cafes", cafeId));
+      if (!snap.exists()) {
+        showBootError("존재하지 않는 카페예요.<br>QR코드를 다시 확인해주세요.");
+        return;
+      }
+      cafeData = snap.data();
+    } catch (e) {
+      showBootError("연결에 실패했어요.<br>인터넷 연결을 확인해주세요.");
+      return;
+    }
+
+    pwOut.textContent = cafeData.wifiPassword || "";
+    document.title = (cafeData.name ? cafeData.name + " · " : "") + "스밈 와이파이 미션";
+
+    $("#boot-overlay").style.display = "none";
+    gearBtn.classList.add("show");
+    trackVisit();
+  }
+
+  async function trackVisit() {
+    try {
+      await setDoc(doc(db, "cafes", cafeId, "visits", todayKey()), { count: increment(1) }, { merge: true });
+    } catch (e) {}
+  }
+  async function trackPlay() {
+    try {
+      await setDoc(doc(db, "cafes", cafeId, "plays", todayKey()), { count: increment(1) }, { merge: true });
+    } catch (e) {}
+  }
+
+  // ======================================================================
+  //  phase transitions
+  // ======================================================================
+  function setPhase(next) {
+    state.phase = next;
+    Object.entries(phases).forEach(([name, el]) => el.classList.toggle("active", name === next));
+    gearBtn.classList.toggle("show", next === "intro");
+
+    const confettiLayer = document.getElementById("confetti-layer");
+    if (confettiLayer) {
+      confettiLayer.classList.remove("active");
+      void confettiLayer.offsetWidth;
+      if (next === "success") {
+        confettiLayer.classList.add("active");
+      }
+    }
+  }
+
+  function goQuiz() { setPhase("quiz"); }
+
+  function pickOption(isCorrect) {
+    if (isCorrect) {
+      setPhase("quiz-correct");
+      const opt = document.querySelector('#phase-quiz-correct .stk-btn');
+      if (opt) { opt.style.animation = "none"; void opt.offsetWidth; opt.style.animation = "pop-in .4s ease"; }
+    } else {
+      setPhase("quiz-fail");
+      const failOpt = $("#fail-opt");
+      failOpt.style.setProperty("--rot", "-3.2deg");
+      failOpt.style.animation = "none"; void failOpt.offsetWidth; failOpt.style.animation = "shake-x .4s ease";
+    }
+  }
+
+  function startShake() {
+    state.count = 0;
+    lastShake = 0;
+    $("#word-bubble").innerHTML = "";
+    $("#shake-count").textContent = "0";
+    setRing(0);
+    setPhase("shake");
+    trackPlay();
+  }
+
+  function setRing(n) {
+    const c = 2 * Math.PI * 40.4;
+    const pct = Math.min(1, n / SHAKE_GOAL);
+    $("#ring-progress").style.strokeDasharray = c.toFixed(1);
+    $("#ring-progress").style.strokeDashoffset = (c * (1 - pct)).toFixed(1);
+  }
+
+  function shakeOnce() {
+    if (state.phase !== "shake") return;
+    const now = performance.now();
+    if (now - lastShake < MANUAL_SHAKE_MIN_GAP) return;
+    lastShake = now;
+
+    state.count = Math.min(SHAKE_GOAL, state.count + 1);
+    $("#shake-count").textContent = state.count;
+    setRing(state.count);
+
+    const ring = $("#ring-wrap");
+    ring.style.animation = "none"; void ring.offsetWidth; ring.style.animation = "ring-pop .35s ease";
+    phases.shake.style.animation = "none"; void phases.shake.offsetWidth; phases.shake.style.animation = "plate-bounce .3s ease";
+
+    [$("#hand-left"), $("#hand-right")].forEach((h) => {
+      h.classList.remove("shake-anim"); void h.offsetWidth; h.classList.add("shake-anim");
+    });
+
+    const word = SENTENCE[state.count - 1];
+    if (word) {
+      const bubble = $("#word-bubble");
+      const prevCurrent = bubble.querySelector(".word-chip.current");
+      if (prevCurrent) prevCurrent.classList.remove("current");
+      const chip = document.createElement("span");
+      chip.className = "word-chip current";
+      chip.textContent = word;
+      bubble.appendChild(chip);
+    }
+
+    if (state.count >= SHAKE_GOAL) {
+      setTimeout(() => setPhase("success"), 500);
+    }
+  }
+
+  async function copyPassword() {
+    const pw = cafeData ? (cafeData.wifiPassword || "") : pwOut.textContent;
+    try {
+      await navigator.clipboard.writeText(pw);
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = pw; document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); document.body.removeChild(ta);
+    }
+    toast.classList.remove("show"); void toast.offsetWidth; toast.classList.add("show");
+  }
+
+  function resetGame() {
+    setPhase("intro");
+  }
+
+  // ======================================================================
+  //  관리자 패널 (이전 프로젝트와 동일 패턴)
+  // ======================================================================
+  const backdrop = $("#modal-backdrop");
+  const loginModal = $("#admin-login-modal");
+  const dashModal = $("#admin-dashboard-modal");
+  const adminPwInput = $("#admin-pw-input");
+  const adminLoginError = $("#admin-login-error");
+
+  function openModal(modal) { backdrop.classList.add("show"); modal.classList.add("show"); }
+  function closeModals() {
+    backdrop.classList.remove("show");
+    loginModal.classList.remove("show");
+    dashModal.classList.remove("show");
+    adminPwInput.value = "";
+    adminLoginError.textContent = "";
+  }
+
+  function handleAdminLogin() {
+    const val = adminPwInput.value;
+    if (!cafeData || !val || val !== cafeData.adminPassword) {
+      adminLoginError.textContent = "비밀번호가 틀렸어요";
+      return;
+    }
+    loginModal.classList.remove("show");
+    adminPwInput.value = "";
+    adminLoginError.textContent = "";
+    openAdminDashboard();
+  }
+
+  function todayKeyList(n) {
+    const out = []; const d = new Date();
+    for (let i = 0; i < n; i++) {
+      out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+      d.setDate(d.getDate() - 1);
+    }
+    return out.reverse();
+  }
+
+  async function fetchDailyCounts(subcollection) {
+    const col = collection(db, "cafes", cafeId, subcollection);
+    const q = query(col, orderBy(documentId(), "desc"), limit(STATS_DAYS));
+    const snap = await getDocs(q);
+    const byDate = {};
+    snap.forEach((d) => { byDate[d.id] = d.data().count || 0; });
+    return byDate;
+  }
+
+  async function loadStats() {
+    const [visitsByDate, playsByDate] = await Promise.all([fetchDailyCounts("visits"), fetchDailyCounts("plays")]);
+    return todayKeyList(STATS_DAYS).map((date) => ({ date, visits: visitsByDate[date] || 0, plays: playsByDate[date] || 0 }));
+  }
+
+  function renderChart(rows) {
+    const w = 288, h = 110, barGap = 2, groupGap = 4;
+    const groupW = rows.length ? (w / rows.length) - groupGap : 0;
+    const barW = Math.max(1, (groupW - barGap) / 2);
+    const max = Math.max(1, ...rows.map((r) => Math.max(r.visits, r.plays)));
+    let bars = "";
+    rows.forEach((r, i) => {
+      const gx = i * (groupW + groupGap);
+      const vH = r.visits > 0 ? Math.max(3, (r.visits / max) * (h - 22)) : 2;
+      const pH = r.plays > 0 ? Math.max(3, (r.plays / max) * (h - 22)) : 2;
+      bars += `<rect x="${gx.toFixed(1)}" y="${(h - vH).toFixed(1)}" width="${barW.toFixed(1)}" height="${vH.toFixed(1)}" rx="2" fill="${r.visits > 0 ? "#346d5e" : "#e7efe9"}"/>`;
+      bars += `<rect x="${(gx + barW + barGap).toFixed(1)}" y="${(h - pH).toFixed(1)}" width="${barW.toFixed(1)}" height="${pH.toFixed(1)}" rx="2" fill="${r.plays > 0 ? "#8fc9ae" : "#e7efe9"}"/>`;
+      const showLabel = rows.length <= 10 || i % 2 === 0 || i === rows.length - 1;
+      if (showLabel) bars += `<text x="${(gx + groupW / 2).toFixed(1)}" y="${h + 13}" font-size="8" fill="#8aa598" text-anchor="middle">${r.date.slice(5).replace("-", "/")}</text>`;
+    });
+    return `<div class="chart-legend"><span class="dot" style="background:#346d5e"></span>방문<span class="dot" style="background:#8fc9ae"></span>참여</div><svg viewBox="0 0 ${w} ${h + 22}" width="100%" height="150">${bars}</svg>`;
+  }
+
+  async function openAdminDashboard() {
+    $("#admin-cafe-name").textContent = (cafeData.name || "카페") + " 관리자";
+    $("#admin-pw-edit").value = cafeData.wifiPassword || "";
+    $("#admin-save-msg").textContent = "";
+    $("#admin-visit-total").textContent = "";
+    $("#admin-chart").innerHTML = '<p class="modal-hint">불러오는 중...</p>';
+    openModal(dashModal);
+    try {
+      const rows = await loadStats();
+      const totalVisits = rows.reduce((s, r) => s + r.visits, 0);
+      const totalPlays = rows.reduce((s, r) => s + r.plays, 0);
+      $("#admin-visit-total").textContent = `최근 ${STATS_DAYS}일 · 방문 ${totalVisits} · 참여 ${totalPlays}`;
+      $("#admin-chart").innerHTML = renderChart(rows);
+    } catch (e) {
+      $("#admin-chart").innerHTML = '<p class="modal-error">통계를 불러오지 못했어요</p>';
+    }
+  }
+
+  async function saveWifiPassword() {
+    const newPw = $("#admin-pw-edit").value.trim();
+    const msg = $("#admin-save-msg");
+    if (!newPw) { msg.textContent = "비밀번호를 입력해주세요"; msg.className = "modal-error"; return; }
+    const btn = $("#admin-pw-save");
+    btn.disabled = true; msg.textContent = "저장 중..."; msg.className = "modal-hint";
+    try {
+      await updateDoc(doc(db, "cafes", cafeId), { wifiPassword: newPw, adminPasswordAttempt: cafeData.adminPassword });
+      cafeData.wifiPassword = newPw;
+      pwOut.textContent = newPw;
+      msg.textContent = "저장됐어요 ✓"; msg.className = "modal-hint";
+    } catch (e) {
+      msg.textContent = "저장 실패, 다시 시도해주세요"; msg.className = "modal-error";
+    }
+    btn.disabled = false;
+  }
+
+  // ======================================================================
+  //  wire up
+  // ======================================================================
+  function init() {
+    $("#start-btn").addEventListener("click", goQuiz);
+    $("#opt1").addEventListener("click", () => pickOption(false));
+    $("#opt2").addEventListener("click", () => pickOption(true));
+    $("#answer-btn").addEventListener("click", () => setPhase("quiz-correct"));
+    $("#next-btn").addEventListener("click", startShake);
+    $("#pw-card").addEventListener("click", copyPassword);
+    $("#reset-btn").addEventListener("click", resetGame);
+
+    phases.shake.addEventListener("click", shakeOnce);
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && state.phase === "shake") { e.preventDefault(); shakeOnce(); }
+      if (e.key === "Escape") closeModals();
+    });
+
+    gearBtn.addEventListener("click", () => openModal(loginModal));
+    backdrop.addEventListener("click", closeModals);
+    document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeModals));
+    $("#admin-login-submit").addEventListener("click", handleAdminLogin);
+    adminPwInput.addEventListener("keydown", (e) => { if (e.key === "Enter") handleAdminLogin(); });
+    $("#admin-pw-save").addEventListener("click", saveWifiPassword);
+
+    setRing(0);
+  }
+
+  init();
+  boot();
+</script>
+</body>
+</html>
