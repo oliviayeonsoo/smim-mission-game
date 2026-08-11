@@ -41,7 +41,7 @@
     width:min(100vw, calc(393px * var(--k)));
     height:min(100vh, calc(852px * var(--k)));
     height:min(100dvh, calc(852px * var(--k)));}
-  #app{position:absolute;left:50%;top:50%;margin-left:-196.5px;margin-top:-426px;width:393px;height:852px;transform-origin:center center;transform:scale(var(--k));overflow:hidden;background:#f5f9f4;}
+  #app{position:absolute;left:50%;top:50%;margin-left:-196.5px;margin-top:-426px;width:393px;height:852px;transform-origin:center center;transform:translateY(var(--shift,0px)) scale(var(--k));overflow:hidden;background:#f5f9f4;}
 
   .phase{display:none;position:absolute;inset:0;overflow:hidden;}
   .phase.active{display:block;animation:fade-in .35s ease both;}
@@ -164,7 +164,7 @@
   .word-bubble .bubble-content{position:absolute;left:0;top:32%;width:100%;height:68%;padding:0 9% 4%;box-sizing:border-box;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px 8px;overflow:hidden;}
   .word-chip{font-family:'Pretendard';font-weight:400;font-size:14px;color:#346d5e;animation:chip-in .4s cubic-bezier(.2,1.4,.4,1) both;}
   .word-chip.current{font-weight:700;text-decoration:underline;text-underline-offset:2px;}
-  .tap-guide{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);color:#cfe8de;font-size:11px;letter-spacing:1px;opacity:.8;z-index:5;white-space:nowrap;}
+  .tap-guide{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);color:#cfe8de;font-size:11px;letter-spacing:1px;opacity:.8;z-index:5;white-space:nowrap;}
 
   /* ===== success ===== */
   #phase-success .title{position:absolute;left:0;top:19.2%;transform:translateY(-50%);width:100%;text-align:center;font-family:'HS굴토끼체';font-size:40px;color:#e3e79b;z-index:5;}
@@ -177,7 +177,7 @@
   .scroll-arrow{position:absolute;left:49%;top:59.2%;width:18px;height:18.6%;transform:translateX(-50%);z-index:5;opacity:.95;pointer-events:none;animation:scroll-link-bob 1.1s ease-in-out infinite;}
   .scroll-arrow::before{content:"";position:absolute;left:50%;top:0;width:2px;height:100%;transform:translateX(-50%);background:linear-gradient(180deg,rgba(227,231,155,0) 0%,rgba(227,231,155,.95) 35%,rgba(227,231,155,.95) 100%);border-radius:999px;}
   .scroll-arrow::after{content:"";position:absolute;left:50%;bottom:0.5px;width:10px;height:10px;border-right:2px solid #e3e79b;border-bottom:2px solid #e3e79b;transform:translate(-50%,0) rotate(45deg);margin-bottom:-1px;}
-  .social{position:absolute;left:49%;top:84.8%;transform:translate(-50%,-50%);text-align:left;color:#e3e79b;font-size:11px;line-height:1.9;z-index:5;white-space:nowrap;}
+  .social{position:absolute;left:49%;top:83.5%;transform:translate(-50%,-50%);text-align:left;color:#e3e79b;font-size:11px;line-height:1.9;z-index:5;white-space:nowrap;}
   .social b{font-weight:700;}
   .social a{color:#e3e79b;text-decoration:underline;}
 
@@ -849,7 +849,9 @@
   // SAFE_H: 항상 화면에 남아있어야 하는 콘텐츠 높이(디자인 기준 px).
   //   852 - 700 = 152px 까지만 잘릴 수 있는데, 그 범위는 위쪽 줄무늬/아래쪽 그림자 같은
   //   장식 영역이라 글자나 오브제는 잘리지 않는다.
-  const DESIGN_W = 393, DESIGN_H = 852, SAFE_H = 700, DESKTOP_MIN_W = 520;
+  // SHIFT_DOWN: 화면 중앙 정렬감을 위해 전체를 아래로 내리는 양(디자인 기준 px).
+  //   위쪽 잘림 여유분 안에서만 적용되므로 여백은 생기지 않는다.
+  const DESIGN_W = 393, DESIGN_H = 852, SAFE_H = 700, DESKTOP_MIN_W = 520, SHIFT_DOWN = 28;
 
   function fitApp() {
     const vw = window.innerWidth;
@@ -863,6 +865,13 @@
       k = Math.min(Math.max(vw / DESIGN_W, vh / DESIGN_H), vh / SAFE_H);
     }
     document.documentElement.style.setProperty("--k", String(k));
+
+    // 화면 중앙에 좀 더 오도록 전체를 살짝 아래로 내린다.
+    // 단 '위에서 이미 잘려나가는 양'을 넘지 않게 해서 위쪽에 빈 여백이 생기지 않도록 함.
+    // (배경·오브제·글자가 같은 캔버스라 통째로 내려가므로 정렬은 그대로 유지됨)
+    const topCrop = Math.max(0, (DESIGN_H * k - Math.min(vh, DESIGN_H * k)) / 2);
+    const shift = Math.max(0, Math.min(SHIFT_DOWN * k, topCrop));
+    document.documentElement.style.setProperty("--shift", shift.toFixed(1) + "px");
   }
 
   fitApp();
