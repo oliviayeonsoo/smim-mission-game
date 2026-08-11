@@ -88,20 +88,24 @@
   .hint-caption.danger{color:#e3e79b;}
   .hint-caption.danger b{color:#e3e79b;}
 
-  .confetti-layer{position:absolute;left:50%;bottom:12%;width:100%;height:42%;transform:translateX(-50%);pointer-events:none;z-index:4;overflow:visible;}
-  .confetti-piece{position:absolute;left:50%;bottom:0;width:8px;height:14px;border-radius:2px;opacity:0;transform-origin:center;animation:none;}
-  .confetti-piece:nth-child(odd){background:#e3e79b;}
-  .confetti-piece:nth-child(even){background:#7cc7a6;}
-  .confetti-piece:nth-child(3n){background:#fff6a2;}
-  .confetti-piece:nth-child(5n){background:#8fd3ff;}
-  .confetti-layer.active .confetti-piece{animation:confetti-burst 2.2s cubic-bezier(.2,.95,.25,1) forwards;}
+  /* 화면 아래에서 쏘아올려 비밀번호 카드(중앙)를 지나 포물선으로 떨어지는 컨페티.
+     조각별 좌표/회전/속도는 스크립트에서 --x, --y 같은 변수로 넣어줌. */
+  .confetti-layer{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden;}
+  .confetti-piece{position:absolute;left:50%;top:88%;opacity:0;transform-origin:center;will-change:transform,opacity;}
 
   .q-title{position:absolute;inset:0;z-index:5;pointer-events:none;}
   .q-title .line{position:absolute;display:flex;align-items:center;justify-content:center;background:#e3e79b;color:#315c51;font-family:'HS굴토끼체';line-height:1.1;white-space:nowrap;box-sizing:border-box;}
 
   .sparkle{position:absolute;width:16px;height:16px;pointer-events:none;opacity:.9;animation:sway 2.4s ease-in-out infinite;}
 
-  @keyframes confetti-burst{0%{opacity:0;transform:translate(-50%,0) scale(.22) rotate(0deg)}14%{opacity:1;transform:translate(calc(-50% + var(--x,0px)),-18px) scale(1) rotate(0deg)}100%{opacity:0;transform:translate(calc(-50% + var(--x,0px)),320px) scale(1) rotate(var(--rot,180deg))}}
+  /* 구간별 easing으로 진짜 포물선을 만든다: 올라갈 땐 감속(ease-out), 떨어질 땐 가속(ease-in) */
+  @keyframes confetti-fly{
+    0%{opacity:0;transform:translate(-50%,0) rotate(0deg) scale(.5);animation-timing-function:cubic-bezier(.12,.72,.36,1);}
+    7%{opacity:1;}
+    45%{transform:translate(calc(-50% + var(--x)),var(--y)) rotate(var(--r1)) scale(1);animation-timing-function:cubic-bezier(.5,0,.86,.6);}
+    82%{opacity:1;}
+    100%{opacity:0;transform:translate(calc(-50% + var(--x2)),var(--ye)) rotate(var(--r2)) scale(.92);}
+  }
 
   /* ===== intro (393x852 basis, converted to %) ===== */
   #phase-intro .headline{position:absolute;inset:0;z-index:5;}
@@ -367,29 +371,7 @@
       <div class="shadow-solid moss"></div>
     </div>
     <div class="dim light"></div>
-    <div class="confetti-layer" id="confetti-layer">
-      <span class="confetti-piece" style="--x:-120px; --rot:18deg; animation-delay:0s;"></span>
-      <span class="confetti-piece" style="--x:-96px; --rot:-24deg; animation-delay:.03s;"></span>
-      <span class="confetti-piece" style="--x:-72px; --rot:42deg; animation-delay:.06s;"></span>
-      <span class="confetti-piece" style="--x:-48px; --rot:-36deg; animation-delay:.09s;"></span>
-      <span class="confetti-piece" style="--x:-24px; --rot:30deg; animation-delay:.12s;"></span>
-      <span class="confetti-piece" style="--x:0px; --rot:-18deg; animation-delay:.15s;"></span>
-      <span class="confetti-piece" style="--x:24px; --rot:64deg; animation-delay:.18s;"></span>
-      <span class="confetti-piece" style="--x:48px; --rot:-52deg; animation-delay:.21s;"></span>
-      <span class="confetti-piece" style="--x:72px; --rot:120deg; animation-delay:.24s;"></span>
-      <span class="confetti-piece" style="--x:96px; --rot:-110deg; animation-delay:.27s;"></span>
-      <span class="confetti-piece" style="--x:120px; --rot:90deg; animation-delay:.3s;"></span>
-      <span class="confetti-piece" style="--x:-140px; --rot:-78deg; animation-delay:.33s;"></span>
-      <span class="confetti-piece" style="--x:140px; --rot:110deg; animation-delay:.36s;"></span>
-      <span class="confetti-piece" style="--x:-60px; --rot:-140deg; animation-delay:.05s;"></span>
-      <span class="confetti-piece" style="--x:60px; --rot:150deg; animation-delay:.08s;"></span>
-      <span class="confetti-piece" style="--x:-100px; --rot:70deg; animation-delay:.11s;"></span>
-      <span class="confetti-piece" style="--x:100px; --rot:-80deg; animation-delay:.14s;"></span>
-      <span class="confetti-piece" style="--x:-20px; --rot:200deg; animation-delay:.17s;"></span>
-      <span class="confetti-piece" style="--x:20px; --rot:-200deg; animation-delay:.2s;"></span>
-      <span class="confetti-piece" style="--x:-80px; --rot:160deg; animation-delay:.23s;"></span>
-      <span class="confetti-piece" style="--x:80px; --rot:-160deg; animation-delay:.26s;"></span>
-    </div>
+    <div class="confetti-layer" id="confetti-layer"></div>
     <p class="badge-eyebrow"><b>스밈</b>과 함께하는 <b>지구 지키기</b></p>
     <p class="title">미션 성공!</p>
     <button class="pw-card" id="pw-card">
@@ -586,14 +568,63 @@
     gearBtn.classList.toggle("show", next === "intro");
     document.documentElement.style.setProperty("--bar", BAR_COLORS[next] || "#0e1f18");
 
-    const confettiLayer = document.getElementById("confetti-layer");
-    if (confettiLayer) {
-      confettiLayer.classList.remove("active");
-      void confettiLayer.offsetWidth;
-      if (next === "success") {
-        confettiLayer.classList.add("active");
-      }
+    if (next === "success") fireConfetti();
+    else {
+      const layer = document.getElementById("confetti-layer");
+      if (layer) layer.innerHTML = "";
     }
+  }
+
+  // ======================================================================
+  //  컨페티 — 화면 아래(y≈750)에서 쏘아올려 비밀번호 카드(y 242~358)를 지나
+  //  포물선을 그리며 떨어졌다 사라진다. 디자인 캔버스(393x852) 기준 px.
+  // ======================================================================
+  const CONFETTI_COLORS = ["#e3e79b", "#7cc7a6", "#fff6a2", "#8fd3ff", "#f6a5a5", "#c9e265", "#ffffff"];
+
+  function fireConfetti() {
+    const layer = document.getElementById("confetti-layer");
+    if (!layer) return;
+    layer.innerHTML = "";
+
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const frag = document.createDocumentFragment();
+
+    for (let i = 0; i < 54; i++) {
+      const p = document.createElement("span");
+      p.className = "confetti-piece";
+
+      // 좌우 부채꼴로 퍼짐 (가장자리로 갈수록 낮게 뜨도록 살짝 보정)
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      const spread = Math.pow(Math.random(), 0.75);      // 가운데가 조금 더 촘촘
+      const x = dir * spread * rnd(70, 185);
+      const x2 = x * rnd(1.1, 1.45);                     // 떨어지며 더 벌어짐
+
+      // 최고점: 비밀번호 카드(위 242 / 아래 358)를 확실히 덮도록
+      const peak = -rnd(330, 585) * (1 - spread * 0.28); // y 750 기준 → 약 165~420
+      const ye = peak + rnd(250, 470);                   // 떨어지는 양
+
+      const size = rnd(6, 11);
+      const long = Math.random() < 0.75;
+      const r1 = rnd(-180, 180);
+
+      p.style.cssText = [
+        `--x:${x.toFixed(1)}px`,
+        `--x2:${x2.toFixed(1)}px`,
+        `--y:${peak.toFixed(1)}px`,
+        `--ye:${ye.toFixed(1)}px`,
+        `--r1:${r1.toFixed(0)}deg`,
+        `--r2:${(r1 + dir * rnd(220, 640)).toFixed(0)}deg`,
+        `width:${size.toFixed(1)}px`,
+        `height:${(long ? size * rnd(1.5, 2.2) : size).toFixed(1)}px`,
+        `background:${CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0]}`,
+        `border-radius:${long ? "1.5px" : "50%"}`,
+        `animation:confetti-fly ${rnd(1.7, 2.6).toFixed(2)}s ${rnd(0, 0.14).toFixed(2)}s forwards`,
+      ].join(";");
+
+      frag.appendChild(p);
+    }
+
+    layer.appendChild(frag);
   }
 
   function goQuiz() { setPhase("quiz"); }
